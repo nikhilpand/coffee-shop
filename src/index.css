@@ -1,0 +1,104 @@
+@import 'tailwindcss';
+
+/* ── Design Tokens ── */
+@theme {
+  --color-ivory: #FAF7F2;
+  --color-cream: #F5F0E8;
+  --color-beige: #EDE6DA;
+  --color-sand: #D9CEBD;
+  --color-caramel: #C4A47A;
+  --color-espresso: #3B2314;
+  --color-coffee: #5C3D2E;
+  --color-charcoal: #2C2420;
+  --color-warm-gray: #8A7E74;
+  --color-border: #E8E0D4;
+  --color-overlay: rgba(44, 36, 32, 0.6);
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+}
+
+/* ── Base ── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-ivory);
+  color: var(--color-charcoal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-caramel);
+  color: white;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-cream);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-sand);
+  border-radius: 3px;
+}
+
+/* ── Font Utilities ── */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* ── Steam Animation ── */
+@keyframes steam-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scaleX(1);
+  }
+  15% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.4;
+    transform: translateY(-40px) scaleX(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scaleX(0.8);
+  }
+}
+
+.steam-line {
+  animation: steam-rise 3s ease-out infinite;
+}
+.steam-line:nth-child(2) {
+  animation-delay: 0.8s;
+  animation-duration: 3.4s;
+}
+.steam-line:nth-child(3) {
+  animation-delay: 1.6s;
+  animation-duration: 2.8s;
+}
+
+/* ── Category Pill Scrollbar (mobile) ── */
+.category-scroll::-webkit-scrollbar {
+  display: none;
+}
+.category-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Focus visible ── */
+*:focus-visible {
+  outline: 2px solid var(--color-caramel);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
