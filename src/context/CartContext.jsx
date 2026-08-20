@@ -20,11 +20,27 @@ export function CartProvider({ children }) {
     localStorage.setItem('slowpour_cart', JSON.stringify(items));
   }, [items]);
 
-  const addItem = useCallback((product, size = null, qty = 1) => {
+  const addItem = useCallback((product, size = null, qty = 1, customizations = null) => {
     const sizeLabel = size?.label || product.sizes?.[0]?.label || 'Regular';
-    const price = size?.price || product.sizes?.[0]?.price || product.price;
+    const basePrice = size?.price || product.sizes?.[0]?.price || product.price;
+
+    let addonPrice = 0;
+    if (customizations?.milkPrice) {
+      addonPrice += customizations.milkPrice;
+    }
+    if (customizations?.extrasPrices) {
+      addonPrice += Object.values(customizations.extrasPrices).reduce((a, b) => a + b, 0);
+    }
+
+    const finalUnitPrice = basePrice + addonPrice;
+
+    // Create unique key based on id, size, milk, extras, and note
+    const customKeySuffix = customizations
+      ? `${customizations.milkLabel || ''}-${(customizations.extrasLabels || []).sort().join('-')}-${customizations.note || ''}`
+      : '';
+    const key = `${product.id}-${sizeLabel}-${customKeySuffix}`;
+
     setItems((prev) => {
-      const key = `${product.id}-${sizeLabel}`;
       const existing = prev.find((i) => i.key === key);
       if (existing) {
         return prev.map((i) => (i.key === key ? { ...i, quantity: i.quantity + qty } : i));
@@ -38,7 +54,9 @@ export function CartProvider({ children }) {
           image: product.image,
           category: product.category,
           size: sizeLabel,
-          price,
+          price: finalUnitPrice,
+          basePrice,
+          customizations: customizations || {},
           quantity: qty,
         },
       ];

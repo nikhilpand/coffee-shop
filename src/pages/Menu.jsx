@@ -5,6 +5,7 @@ import { SlidersHorizontal } from 'lucide-react';
 import SectionHeading from '../components/SectionHeading';
 import CategoryFilter from '../components/CategoryFilter';
 import ProductCard from '../components/ProductCard';
+import TableBanner from '../components/TableBanner';
 import products, { categories } from '../data/products';
 
 const sortOptions = [
@@ -71,6 +72,9 @@ export default function Menu({ favorites }) {
       transition={{ duration: 0.3 }}
       className="pt-24 md:pt-32 pb-20"
     >
+      <div className="mb-8">
+        <TableBanner />
+      </div>
       <div className="max-w-7xl mx-auto px-5 md:px-8">
         <SectionHeading
           eyebrow="Our Menu"

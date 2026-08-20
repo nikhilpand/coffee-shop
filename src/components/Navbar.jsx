@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Heart, ShoppingBag, Menu, X } from 'lucide-react';
+import { Search, Heart, ShoppingBag, Menu, X, UtensilsCrossed } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useTable } from '../context/TableContext';
 
 export default function Navbar({ search, favorites }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { itemCount, setIsDrawerOpen } = useCart();
+  const { tableNumber, openTableModal } = useTable();
   const location = useLocation();
 
   useEffect(() => {
@@ -41,13 +43,25 @@ export default function Navbar({ search, favorites }) {
         <div className="max-w-7xl mx-auto px-5 md:px-8">
           <nav className="flex items-center justify-between h-16 md:h-20" aria-label="Main navigation">
             {/* Logo */}
-            <Link
-              to="/"
-              className="font-display text-xl md:text-2xl font-semibold text-espresso tracking-tight"
-              aria-label="Slow Pour — Home"
-            >
-              Slow Pour
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/"
+                className="font-display text-xl md:text-2xl font-semibold text-espresso tracking-tight"
+                aria-label="Slow Pour — Home"
+              >
+                Slow Pour
+              </Link>
+
+              {/* Table Selector Pill */}
+              <button
+                onClick={openTableModal}
+                className="flex items-center gap-1.5 px-3 py-1 bg-cream/90 hover:bg-cream border border-border/80 rounded-full text-xs text-espresso transition-all shadow-xs"
+                title="Click to change your table"
+              >
+                <UtensilsCrossed size={12} className="text-caramel" />
+                <span className="font-semibold">Table {tableNumber}</span>
+              </button>
+            </div>
 
             {/* Center nav — desktop */}
             <div className="hidden md:flex items-center gap-8">
@@ -57,17 +71,23 @@ export default function Navbar({ search, favorites }) {
                   to={link.to}
                   className={`text-sm font-medium tracking-wide uppercase transition-colors duration-200 ${
                     location.pathname === link.to
-                      ? 'text-espresso'
+                      ? 'text-espresso font-semibold'
                       : 'text-warm-gray hover:text-espresso'
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
+              <Link
+                to="/staff"
+                className="text-xs font-semibold tracking-wider uppercase text-caramel hover:text-espresso bg-cream/80 px-3 py-1 rounded-full border border-border/60 transition-colors"
+              >
+                Barista Station
+              </Link>
             </div>
 
             {/* Right actions */}
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-1.5 md:gap-3">
               <button
                 onClick={search.open}
                 className="p-2 rounded-full text-warm-gray hover:text-espresso hover:bg-cream transition-all duration-200"
@@ -138,10 +158,24 @@ export default function Navbar({ search, favorites }) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
-              className="absolute right-0 top-0 bottom-0 w-72 bg-ivory border-l border-border p-8 pt-24"
+              className="absolute right-0 top-0 bottom-0 w-72 bg-ivory border-l border-border p-8 pt-24 flex flex-col justify-between"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-6">
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    openTableModal();
+                  }}
+                  className="flex items-center justify-between p-3.5 bg-cream rounded-2xl border border-border/80 text-left"
+                >
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-warm-gray block">Your Seating</span>
+                    <span className="font-display text-lg font-bold text-espresso">Table {tableNumber}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-caramel">Change</span>
+                </button>
+
                 {navLinks.map((link) => (
                   <Link
                     key={link.to}
@@ -161,10 +195,17 @@ export default function Navbar({ search, favorites }) {
                 >
                   Favorites
                 </Link>
+                <Link
+                  to="/staff"
+                  className="font-display text-xl text-caramel transition-colors pt-2 border-t border-border/60"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Barista Station ☕
+                </Link>
               </div>
 
-              <div className="mt-12 pt-8 border-t border-border">
-                <p className="text-sm text-warm-gray">
+              <div className="pt-6 border-t border-border">
+                <p className="text-xs text-warm-gray">
                   Mon – Fri: 8 AM – 9 PM<br />
                   Sat – Sun: 9 AM – 10 PM
                 </p>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
@@ -5,24 +6,39 @@ import Footer from './components/Footer';
 import Toast from './components/Toast';
 import CartDrawer from './components/CartDrawer';
 import SearchOverlay from './components/SearchOverlay';
+import TableModal from './components/TableModal';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
 import Product from './pages/Product';
 import About from './pages/About';
 import FavoritesPage from './pages/Favorites';
+import OrderStatus from './pages/OrderStatus';
+import StaffDashboard from './pages/StaffDashboard';
 import { useSearch } from './hooks/useSearch';
 import { useFavorites } from './hooks/useFavorites';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 export default function App() {
   const location = useLocation();
   const search = useSearch();
   const favorites = useFavorites();
 
+  const isStaffRoute = location.pathname.startsWith('/staff');
+
   return (
     <div className="min-h-screen bg-ivory">
-      <Navbar search={search} favorites={favorites} />
+      <ScrollToTop />
+      {!isStaffRoute && <Navbar search={search} favorites={favorites} />}
       <SearchOverlay search={search} />
       <CartDrawer />
+      <TableModal />
       <Toast />
 
       <AnimatePresence mode="wait">
@@ -32,10 +48,12 @@ export default function App() {
           <Route path="/product/:id" element={<Product favorites={favorites} />} />
           <Route path="/about" element={<About />} />
           <Route path="/favorites" element={<FavoritesPage favorites={favorites} />} />
+          <Route path="/order/:orderId" element={<OrderStatus />} />
+          <Route path="/staff" element={<StaffDashboard />} />
         </Routes>
       </AnimatePresence>
 
-      <Footer />
+      {!isStaffRoute && <Footer />}
     </div>
   );
 }

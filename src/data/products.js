@@ -390,4 +390,18 @@ export const testimonials = [
   },
 ];
 
+export const milkOptions = [
+  { id: 'whole', label: 'Whole Milk', price: 0 },
+  { id: 'oat', label: 'Oat Milk', price: 40 },
+  { id: 'almond', label: 'Almond Milk', price: 40 },
+  { id: 'soy', label: 'Soy Milk', price: 30 },
+];
+
+export const extraAddons = [
+  { id: 'shot', label: 'Extra Espresso Shot', price: 50 },
+  { id: 'vanilla', label: 'Vanilla Syrup', price: 30 },
+  { id: 'caramel', label: 'Caramel Drizzle', price: 30 },
+  { id: 'decaf', label: 'Decaf Beans', price: 20 },
+];
+
 export default products;
