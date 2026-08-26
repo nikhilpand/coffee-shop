@@ -14,72 +14,6 @@ import {
 const STORAGE_KEY = 'slowpour_orders';
 const CHANNEL_NAME = 'slowpour_realtime_orders';
 
-// Initial sample orders for barista demonstration if database is completely new
-const INITIAL_DEMO_ORDERS = [
-  {
-    id: 'ORD-7821',
-    tableNumber: 4,
-    customerName: 'Rahul',
-    items: [
-      {
-        id: 4,
-        name: 'Latte',
-        size: 'Large',
-        price: 270,
-        quantity: 2,
-        customizations: { milk: 'Oat Milk (+₹40)', milkLabel: 'Oat Milk', extras: ['Extra Shot (+₹50)'], extrasLabels: ['Extra Shot'], note: 'Extra hot please' },
-      },
-      {
-        id: 16,
-        name: 'Butter Croissant',
-        size: 'One',
-        price: 180,
-        quantity: 1,
-        customizations: { note: 'Warm before serving' },
-      },
-    ],
-    subtotal: 810,
-    tax: 41,
-    total: 851,
-    paymentMethod: 'UPI Online',
-    paymentStatus: 'Paid',
-    status: 'preparing', // 'received' | 'preparing' | 'served' | 'cancelled'
-    createdAt: new Date(Date.now() - 6 * 60 * 1000).toISOString(),
-    estimatedTime: 10,
-  },
-  {
-    id: 'ORD-7822',
-    tableNumber: 2,
-    customerName: 'Ananya',
-    items: [
-      {
-        id: 10,
-        name: 'Cold Brew',
-        size: 'Regular',
-        price: 260,
-        quantity: 1,
-        customizations: { milk: 'None', extras: [] },
-      },
-      {
-        id: 23,
-        name: 'Chocolate Cake',
-        size: 'Slice',
-        price: 280,
-        quantity: 1,
-        customizations: {},
-      },
-    ],
-    subtotal: 540,
-    tax: 27,
-    total: 567,
-    paymentMethod: 'Pay at Counter',
-    paymentStatus: 'Pending',
-    status: 'received',
-    createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    estimatedTime: 8,
-  },
-];
-
 class OrderService {
   constructor() {
     this.channel = null;
@@ -137,19 +71,14 @@ class OrderService {
             };
           });
 
-          if (cloudOrders.length > 0) {
-            this.cachedOrders = cloudOrders;
-            this.saveLocalOrders(cloudOrders);
-            this.notifyListeners(cloudOrders);
-          } else {
-            // If cloud is empty, seed demo orders into local & notify
-            this.notifyListeners(this.cachedOrders.length > 0 ? this.cachedOrders : INITIAL_DEMO_ORDERS);
-          }
+          this.cachedOrders = cloudOrders;
+          this.saveLocalOrders(cloudOrders);
+          this.notifyListeners(cloudOrders);
         },
         (error) => {
           console.warn('Firestore real-time sync note (using local cache until online):', error.message);
           this.isFirestoreActive = false;
-          // Fallback seamlessly to local cache
+          // Fallback to local cache
           this.notifyListeners(this.cachedOrders);
         }
       );
@@ -161,15 +90,17 @@ class OrderService {
 
   getLocalOrders() {
     try {
-      if (typeof window === 'undefined') return INITIAL_DEMO_ORDERS;
+      if (typeof window === 'undefined') return [];
       const data = localStorage.getItem(STORAGE_KEY);
-      if (!data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DEMO_ORDERS));
-        return INITIAL_DEMO_ORDERS;
+      if (!data) return [];
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        // Filter out any old demo orders (ORD-7821, ORD-7822)
+        return parsed.filter((o) => o.id !== 'ORD-7821' && o.id !== 'ORD-7822');
       }
-      return JSON.parse(data);
+      return [];
     } catch {
-      return INITIAL_DEMO_ORDERS;
+      return [];
     }
   }
 
