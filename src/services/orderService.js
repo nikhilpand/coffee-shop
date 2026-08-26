@@ -192,7 +192,7 @@ class OrderService {
       : this.getLocalOrders();
   }
 
-  async createOrder({ tableNumber, items, subtotal, tax, total, paymentMethod, customerName = '' }) {
+  createOrder({ tableNumber, items, subtotal, tax, total, paymentMethod, customerName = '' }) {
     const orderId = `ORD-${Date.now().toString(36).toUpperCase().slice(-4)}${Math.floor(10 + Math.random() * 90)}`;
     const newOrder = {
       id: orderId,
@@ -209,18 +209,20 @@ class OrderService {
       estimatedTime: Math.min(15, Math.max(6, items.length * 4)),
     };
 
-    // 1. Optimistic local update
+    // 1. Instant local state update
     const updatedOrders = [newOrder, ...this.getOrders().filter(o => o.id !== orderId)];
     this.cachedOrders = updatedOrders;
     this.saveLocalOrders(updatedOrders);
     this.notifyListeners(updatedOrders);
 
-    // 2. Sync to Firebase Cloud Firestore
+    // 2. Sync to Firebase Cloud Firestore in background (non-blocking)
     try {
       const orderDocRef = doc(db, 'orders', orderId);
-      await setDoc(orderDocRef, newOrder);
+      setDoc(orderDocRef, newOrder).catch((err) => {
+        console.warn('Cloud Firestore background sync note:', err.message);
+      });
     } catch (err) {
-      console.error('Cloud Firestore sync error during order placement:', err);
+      console.warn('Cloud Firestore dispatch error:', err.message);
     }
 
     return newOrder;
@@ -231,11 +233,14 @@ class OrderService {
     const found = this.getOrderById(id);
     if (found) return found;
 
-    // 2. Fetch directly from Cloud Firestore
+    // 2. Fetch directly from Cloud Firestore with 2s timeout
     try {
       const docRef = doc(db, 'orders', id);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
+      const fetchPromise = getDoc(docRef);
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2000));
+      const snap = await Promise.race([fetchPromise, timeoutPromise]);
+
+      if (snap && snap.exists && snap.exists()) {
         const orderData = { id: snap.id, ...snap.data() };
         // Update cache
         const updated = [orderData, ...this.getOrders().filter((o) => o.id !== id)];
@@ -247,7 +252,7 @@ class OrderService {
     } catch (err) {
       console.warn('Direct Firestore order fetch error:', err);
     }
-    return null;
+    return this.getOrderById(id);
   }
 
   getOrderById(id) {

@@ -18,11 +18,11 @@ export default function CartDrawer() {
   const [customerName, setCustomerName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     setIsProcessing(true);
 
     try {
-      const order = await orderService.createOrder({
+      const order = orderService.createOrder({
         tableNumber,
         items,
         subtotal,
@@ -40,7 +40,7 @@ export default function CartDrawer() {
       setIsDrawerOpen(false);
       clearCart();
 
-      // Navigate to live customer order tracking page
+      // Navigate to live customer order tracking page immediately
       navigate(`/order/${order.id}`);
     } catch (err) {
       console.error('Order placement error:', err);

@@ -19,7 +19,15 @@ export default function OrderStatus() {
   useEffect(() => {
     let isMounted = true;
 
-    // 1. If not found in immediate memory, fetch from Firestore cloud
+    // Safety timeout: Never keep the customer waiting for more than 1s
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        setOrder((curr) => curr || orderService.getOrderById(orderId));
+        setIsLoading(false);
+      }
+    }, 1000);
+
+    // 1. Fetch from Firestore if not found in memory
     if (!order) {
       orderService.getOrderDoc(orderId).then((fetched) => {
         if (isMounted) {
@@ -27,8 +35,6 @@ export default function OrderStatus() {
           setIsLoading(false);
         }
       });
-    } else {
-      setIsLoading(false);
     }
 
     // 2. Real-time stream subscription for live status changes
@@ -42,11 +48,12 @@ export default function OrderStatus() {
 
     return () => {
       isMounted = false;
+      clearTimeout(timer);
       unsubscribe();
     };
-  }, [orderId]);
+  }, [orderId, order]);
 
-  if (isLoading) {
+  if (isLoading && !order) {
     return (
       <main className="pt-36 pb-24 text-center max-w-md mx-auto px-5">
         <div className="w-12 h-12 rounded-full bg-cream text-espresso flex items-center justify-center mx-auto mb-4 animate-bounce">
