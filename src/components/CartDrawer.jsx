@@ -1,22 +1,36 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, ShoppingBag, UtensilsCrossed, QrCode, CreditCard, Banknote, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, UtensilsCrossed, QrCode, Banknote, ArrowRight, CheckCircle2, Sparkles, HeartHandshake } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useTable } from '../context/TableContext';
 import { formatPrice } from '../utils/formatPrice';
 import { orderService } from '../services/orderService';
 import { soundEffects } from '../utils/soundEffects';
+import products from '../data/products';
+
+const TIP_OPTIONS = [0, 20, 30, 50];
 
 export default function CartDrawer() {
-  const { items, removeItem, updateQuantity, subtotal, tax, total, itemCount, isDrawerOpen, setIsDrawerOpen, clearCart } = useCart();
+  const { items, removeItem, updateQuantity, subtotal, tax, total, itemCount, isDrawerOpen, setIsDrawerOpen, clearCart, addItem } = useCart();
   const { tableNumber, openTableModal } = useTable();
   const navigate = useNavigate();
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('UPI Online'); // 'UPI Online' | 'Pay at Counter'
   const [customerName, setCustomerName] = useState('');
+  const [selectedTip, setSelectedTip] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Cross-sell recommendations: suggest popular pastries not yet in cart
+  const suggestedPairings = useMemo(() => {
+    const cartIds = items.map((i) => i.id);
+    return products
+      .filter((p) => (p.category === 'Pastries' || p.category === 'Desserts') && !cartIds.includes(p.id))
+      .slice(0, 2);
+  }, [items]);
+
+  const finalTotal = total + selectedTip;
 
   const handlePlaceOrder = () => {
     setIsProcessing(true);
@@ -27,7 +41,8 @@ export default function CartDrawer() {
         items,
         subtotal,
         tax,
-        total,
+        total: finalTotal,
+        tip: selectedTip,
         paymentMethod,
         customerName,
       });
@@ -101,7 +116,7 @@ export default function CartDrawer() {
                 </div>
                 <button
                   onClick={openTableModal}
-                  className="text-xs font-medium text-caramel hover:text-espresso transition-colors"
+                  className="text-xs font-semibold text-caramel hover:text-espresso transition-colors underline"
                 >
                   Change Table
                 </button>
@@ -121,7 +136,7 @@ export default function CartDrawer() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3.5">
+                <div className="space-y-4">
                   <AnimatePresence>
                     {items.map((item) => (
                       <motion.div
@@ -199,6 +214,42 @@ export default function CartDrawer() {
                       </motion.div>
                     ))}
                   </AnimatePresence>
+
+                  {/* Smart Pairings Upsell Box */}
+                  {suggestedPairings.length > 0 && (
+                    <div className="bg-cream/50 rounded-2xl p-3.5 border border-border/60 mt-4">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-espresso mb-2.5">
+                        <Sparkles size={13} className="text-caramel" />
+                        <span>Fresh from the Oven Pairings</span>
+                      </div>
+                      <div className="space-y-2">
+                        {suggestedPairings.map((pairing) => (
+                          <div
+                            key={pairing.id}
+                            className="bg-white rounded-xl p-2.5 flex items-center justify-between border border-border/40"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <img
+                                src={pairing.image}
+                                alt={pairing.name}
+                                className="w-10 h-10 rounded-lg object-cover"
+                              />
+                              <div>
+                                <span className="font-semibold text-xs text-espresso block">{pairing.name}</span>
+                                <span className="text-[11px] text-warm-gray">{formatPrice(pairing.price)}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => addItem(pairing)}
+                              className="px-3 py-1 bg-cream hover:bg-espresso hover:text-ivory text-espresso text-[11px] font-semibold rounded-full border border-border/70 transition-colors"
+                            >
+                              + Add
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -211,11 +262,11 @@ export default function CartDrawer() {
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-warm-gray">
-                  <span>GST & Café Service (5%)</span>
+                  <span>GST & Service (5%)</span>
                   <span>{formatPrice(tax)}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-espresso pt-2 border-t border-border/60">
-                  <span>Estimated Total</span>
+                  <span>Total Amount</span>
                   <span className="text-lg">{formatPrice(total)}</span>
                 </div>
                 <button
@@ -260,9 +311,9 @@ export default function CartDrawer() {
                   className="w-12 h-12 border-3 border-caramel border-t-transparent rounded-full mx-auto mb-4"
                 />
                 <h3 className="font-display text-2xl font-semibold text-espresso mb-1">
-                  Sending Ticket to Barista...
+                  Dispatching to Table {tableNumber}...
                 </h3>
-                <p className="text-xs text-warm-gray">Registering order for Table {tableNumber}</p>
+                <p className="text-xs text-warm-gray">Registering ticket with kitchen display</p>
               </div>
             ) : (
               <div>
@@ -270,7 +321,7 @@ export default function CartDrawer() {
                 <div className="flex items-center justify-between mb-5 pb-4 border-b border-border/60">
                   <div>
                     <h3 className="font-display text-2xl font-semibold text-espresso">Table Checkout</h3>
-                    <p className="text-xs text-warm-gray">Dispatching to Table {tableNumber}</p>
+                    <p className="text-xs text-warm-gray">Freshly served right to <strong>Table {tableNumber}</strong></p>
                   </div>
                   <button
                     onClick={() => setShowCheckout(false)}
@@ -295,63 +346,89 @@ export default function CartDrawer() {
                   />
                 </div>
 
+                {/* Barista Tip Selector */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-warm-gray mb-2">
+                    <HeartHandshake size={14} className="text-caramel" />
+                    <span>Appreciate your barista?</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {TIP_OPTIONS.map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setSelectedTip(amt)}
+                        className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                          selectedTip === amt
+                            ? 'bg-espresso text-ivory border-espresso shadow-xs'
+                            : 'bg-white text-warm-gray border-border/60 hover:border-caramel/40'
+                        }`}
+                      >
+                        {amt === 0 ? 'No tip' : `+₹${amt}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Payment Method Selector */}
-                <div className="mb-6">
+                <div className="mb-5">
                   <span className="block text-xs font-medium uppercase tracking-wider text-warm-gray mb-2">
                     Payment Preference
                   </span>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('UPI Online')}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      className={`p-3 rounded-2xl border text-left transition-all ${
                         paymentMethod === 'UPI Online'
                           ? 'bg-espresso text-ivory border-espresso shadow-sm'
                           : 'bg-white border-border/60 text-charcoal hover:border-caramel/40'
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <QrCode size={16} />
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <QrCode size={15} />
                         <span className="font-semibold text-xs">Pay Online (UPI)</span>
                       </div>
-                      <p className={`text-[11px] ${paymentMethod === 'UPI Online' ? 'text-ivory/70' : 'text-warm-gray'}`}>
-                        GPay, PhonePe, Paytm, Cards
+                      <p className={`text-[10px] ${paymentMethod === 'UPI Online' ? 'text-ivory/70' : 'text-warm-gray'}`}>
+                        GPay, PhonePe, Paytm
                       </p>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('Pay at Counter')}
-                      className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      className={`p-3 rounded-2xl border text-left transition-all ${
                         paymentMethod === 'Pay at Counter'
                           ? 'bg-espresso text-ivory border-espresso shadow-sm'
                           : 'bg-white border-border/60 text-charcoal hover:border-caramel/40'
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Banknote size={16} />
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <Banknote size={15} />
                         <span className="font-semibold text-xs">Pay at Counter</span>
                       </div>
-                      <p className={`text-[11px] ${paymentMethod === 'Pay at Counter' ? 'text-ivory/70' : 'text-warm-gray'}`}>
-                        Cash or Card when leaving
+                      <p className={`text-[10px] ${paymentMethod === 'Pay at Counter' ? 'text-ivory/70' : 'text-warm-gray'}`}>
+                        Cash/Card on exit
                       </p>
                     </button>
                   </div>
                 </div>
 
                 {/* Summary Box */}
-                <div className="bg-cream/70 rounded-2xl p-4 mb-6 border border-border/60 space-y-2">
-                  <div className="flex justify-between text-xs text-warm-gray">
+                <div className="bg-cream/70 rounded-2xl p-3.5 mb-5 border border-border/60 space-y-1.5 text-xs">
+                  <div className="flex justify-between text-warm-gray">
                     <span>Table Destination</span>
-                    <strong className="text-espresso">Table {tableNumber}</strong>
+                    <strong className="text-espresso font-semibold">Table {tableNumber}</strong>
                   </div>
-                  <div className="flex justify-between text-xs text-warm-gray">
-                    <span>Items Count</span>
-                    <span>{itemCount} items</span>
-                  </div>
+                  {selectedTip > 0 && (
+                    <div className="flex justify-between text-caramel font-semibold">
+                      <span>Barista Craft Tip</span>
+                      <span>+₹{selectedTip}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm font-bold text-espresso pt-2 border-t border-border/40">
                     <span>Total Amount</span>
-                    <span>{formatPrice(total)}</span>
+                    <span>{formatPrice(finalTotal)}</span>
                   </div>
                 </div>
 
@@ -361,7 +438,7 @@ export default function CartDrawer() {
                   className="w-full py-3.5 bg-espresso text-ivory text-sm font-semibold rounded-full hover:bg-coffee transition-colors shadow-md flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 size={16} />
-                  Confirm & Place Order ({formatPrice(total)})
+                  Confirm & Place Order ({formatPrice(finalTotal)})
                 </button>
               </div>
             )}

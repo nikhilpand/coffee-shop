@@ -1,14 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coffee, CheckCircle2, Clock, Volume2, VolumeX, Lock, Unlock, ArrowRight, UtensilsCrossed, RefreshCw, DollarSign, Filter } from 'lucide-react';
+import { Coffee, CheckCircle2, Clock, Volume2, VolumeX, Lock, UtensilsCrossed, DollarSign, QrCode, Printer, Sparkles, AlertTriangle } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { soundEffects } from '../utils/soundEffects';
 import { formatPrice } from '../utils/formatPrice';
+import TableQrGeneratorModal from '../components/TableQrGeneratorModal';
 
 export default function StaffDashboard() {
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('active'); // 'active' | 'preparing' | 'served' | 'all'
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return sessionStorage.getItem('slowpour_staff_auth') === 'true';
@@ -68,6 +70,53 @@ export default function StaffDashboard() {
     orderService.updateOrderStatus(orderId, newStatus, newPaymentStatus);
   };
 
+  const handlePrintTicket = (order) => {
+    const printWindow = window.open('', '_blank', 'width=350,height=500');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Ticket ${order.id}</title>
+          <style>
+            body { font-family: monospace; padding: 15px; font-size: 12px; line-height: 1.4; }
+            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
+            .table-badge { font-size: 18px; font-weight: bold; margin: 4px 0; }
+            .item { display: flex; justify-content: space-between; margin-bottom: 4px; }
+            .notes { font-size: 10px; font-style: italic; margin-left: 8px; }
+            .footer { border-top: 1px dashed #000; margin-top: 8px; padding-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>SLOW POUR CAFÉ</h2>
+            <div class="table-badge">TABLE ${order.tableNumber}</div>
+            <div>Order: ${order.id}</div>
+            <div>${new Date(order.createdAt).toLocaleTimeString()}</div>
+            <div>Guest: ${order.customerName || 'Dine-in Guest'}</div>
+          </div>
+          <div>
+            ${order.items.map(i => `
+              <div class="item">
+                <span>${i.quantity}x ${i.name} (${i.size})</span>
+                <span>₹${i.price * i.quantity}</span>
+              </div>
+              ${i.customizations?.milkLabel ? `<div class="notes">🥛 ${i.customizations.milkLabel}</div>` : ''}
+              ${i.customizations?.extrasLabels?.length ? `<div class="notes">✨ ${i.customizations.extrasLabels.join(', ')}</div>` : ''}
+              ${i.customizations?.note ? `<div class="notes">Note: "${i.customizations.note}"</div>` : ''}
+            `).join('')}
+          </div>
+          <div class="footer">
+            <div class="item"><strong>Total:</strong> <strong>₹${order.total}</strong></div>
+            <div>Payment: ${order.paymentStatus} (${order.paymentMethod})</div>
+          </div>
+          <script>window.print(); window.close();</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   // Metrics
   const metrics = useMemo(() => {
     const active = orders.filter((o) => o.status === 'received' || o.status === 'preparing').length;
@@ -119,7 +168,7 @@ export default function StaffDashboard() {
             {pinError && <p className="text-xs text-red-600">Incorrect PIN. Try 1234.</p>}
             <button
               type="submit"
-              className="w-full py-3.5 bg-espresso text-ivory text-sm font-semibold rounded-full hover:bg-coffee transition-colors"
+              className="w-full py-3.5 bg-espresso text-ivory text-sm font-semibold rounded-full hover:bg-coffee transition-colors shadow-xs"
             >
               Unlock Dashboard
             </button>
@@ -142,25 +191,33 @@ export default function StaffDashboard() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-xs font-bold tracking-widest uppercase text-emerald-800">Live Kitchen Display</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-emerald-800">Live Kitchen Display · Real-Time Cloud</p>
             </div>
             <h1 className="font-display text-3xl font-bold text-espresso">Slow Pour Barista Station</h1>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              onClick={() => setIsQrModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-white border border-border text-espresso hover:bg-cream transition-colors shadow-2xs"
+            >
+              <QrCode size={15} className="text-caramel" />
+              <span>Table QR Generator</span>
+            </button>
+
             <button
               onClick={() => {
                 setSoundEnabled(!soundEnabled);
                 if (!soundEnabled) soundEffects.playOrderBell();
               }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all shadow-2xs ${
                 soundEnabled
                   ? 'bg-espresso text-ivory border-espresso'
                   : 'bg-white text-warm-gray border-border/70'
               }`}
             >
               {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
-              <span>{soundEnabled ? 'Chime Alerts ON' : 'Chime Muted'}</span>
+              <span>{soundEnabled ? 'Chimes ON' : 'Muted'}</span>
             </button>
 
             <button
@@ -176,7 +233,7 @@ export default function StaffDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-4 border border-border shadow-xs flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase font-medium text-warm-gray">Active Brewing Queue</p>
+              <p className="text-xs uppercase font-semibold text-warm-gray">Active Brewing Queue</p>
               <p className="font-display text-3xl font-bold text-espresso">{metrics.active}</p>
             </div>
             <div className="w-11 h-11 bg-amber-100 text-amber-900 rounded-xl flex items-center justify-center">
@@ -186,7 +243,7 @@ export default function StaffDashboard() {
 
           <div className="bg-white rounded-2xl p-4 border border-border shadow-xs flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase font-medium text-warm-gray">Orders Served</p>
+              <p className="text-xs uppercase font-semibold text-warm-gray">Orders Served Today</p>
               <p className="font-display text-3xl font-bold text-espresso">{metrics.servedToday}</p>
             </div>
             <div className="w-11 h-11 bg-green-100 text-green-900 rounded-xl flex items-center justify-center">
@@ -196,7 +253,7 @@ export default function StaffDashboard() {
 
           <div className="bg-white rounded-2xl p-4 border border-border shadow-xs flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase font-medium text-warm-gray">Paid Register Today</p>
+              <p className="text-xs uppercase font-semibold text-warm-gray">Paid Register Total</p>
               <p className="font-display text-3xl font-bold text-espresso">{formatPrice(metrics.revenue)}</p>
             </div>
             <div className="w-11 h-11 bg-cream text-espresso rounded-xl flex items-center justify-center">
@@ -243,6 +300,7 @@ export default function StaffDashboard() {
                 const isServed = order.status === 'served';
 
                 const timeAgo = Math.round((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+                const isOverdue = timeAgo > 10 && !isServed;
 
                 return (
                   <motion.div
@@ -252,11 +310,13 @@ export default function StaffDashboard() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     className={`bg-white rounded-3xl p-5 border transition-all shadow-xs flex flex-col justify-between ${
-                      isNew
+                      isOverdue
+                        ? 'border-red-400 ring-2 ring-red-400/20'
+                        : isNew
                         ? 'border-amber-400 ring-2 ring-amber-400/20'
                         : isPreparing
                         ? 'border-caramel/80'
-                        : 'border-border/60 opacity-80'
+                        : 'border-border/60 opacity-85'
                     }`}
                   >
                     <div>
@@ -268,13 +328,15 @@ export default function StaffDashboard() {
                           </span>
                           <div>
                             <span className="font-bold text-sm text-espresso block">Table {order.tableNumber}</span>
-                            <span className="text-[11px] text-warm-gray">{order.customerName || 'Guest'}</span>
+                            <span className="text-[11px] text-warm-gray">{order.customerName || 'Dine-in Guest'}</span>
                           </div>
                         </div>
 
                         <div className="text-right">
                           <span className="font-mono text-xs font-bold text-warm-gray block">{order.id}</span>
-                          <span className="text-[10px] text-warm-gray flex items-center gap-1 justify-end">
+                          <span className={`text-[10px] flex items-center gap-1 justify-end font-semibold ${
+                            isOverdue ? 'text-red-600' : 'text-warm-gray'
+                          }`}>
                             <Clock size={10} />
                             {timeAgo <= 0 ? 'Just now' : `${timeAgo}m ago`}
                           </span>
@@ -282,7 +344,7 @@ export default function StaffDashboard() {
                       </div>
 
                       {/* Items List */}
-                      <div className="space-y-3 mb-4">
+                      <div className="space-y-2.5 mb-4">
                         {order.items.map((item, idx) => (
                           <div key={idx} className="bg-cream/40 rounded-xl p-2.5 border border-border/30">
                             <div className="flex justify-between font-semibold text-xs text-espresso">
@@ -315,7 +377,17 @@ export default function StaffDashboard() {
                     {/* Ticket Footer & Actions */}
                     <div className="pt-3 border-t border-border/60">
                       <div className="flex items-center justify-between text-xs mb-3">
-                        <span className="font-bold text-espresso">{formatPrice(order.total)}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-espresso">{formatPrice(order.total)}</span>
+                          <button
+                            onClick={() => handlePrintTicket(order)}
+                            className="p-1 text-warm-gray hover:text-espresso rounded hover:bg-cream"
+                            title="Print counter ticket"
+                          >
+                            <Printer size={13} />
+                          </button>
+                        </div>
+
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                             order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-900' : 'bg-amber-100 text-amber-900'
@@ -325,7 +397,7 @@ export default function StaffDashboard() {
                           {order.paymentStatus === 'Pending' && (
                             <button
                               onClick={() => updateStatus(order.id, order.status, 'Paid')}
-                              className="text-[10px] underline font-medium text-caramel hover:text-espresso"
+                              className="text-[10px] underline font-bold text-caramel hover:text-espresso"
                             >
                               Mark Paid
                             </button>
@@ -369,6 +441,12 @@ export default function StaffDashboard() {
           </div>
         )}
       </div>
+
+      {/* Table QR Generator Modal */}
+      <TableQrGeneratorModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+      />
     </motion.main>
   );
 }
