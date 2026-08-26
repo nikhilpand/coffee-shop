@@ -15,5 +15,5 @@ const firebaseConfig = {
 // Initialize Firebase App
 export const app = initializeApp(firebaseConfig);
 
-// Initialize Cloud Firestore database
-export const db = getFirestore(app);
+// Initialize Cloud Firestore database (pointing to 'default' database)
+export const db = getFirestore(app, 'default');
