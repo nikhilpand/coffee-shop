@@ -19,13 +19,9 @@ export default function Home({ favorites }) {
   const pastries = products.filter((p) => p.category === 'Pastries').slice(0, 3);
 
   return (
-    <motion.main
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <main>
       <Hero />
+
 
       {/* ── Featured Coffee ── */}
       <section className="py-20 md:py-28">
@@ -250,7 +246,7 @@ export default function Home({ favorites }) {
           </motion.div>
         </div>
       </section>
-    </motion.main>
+    </main>
   );
 }
 

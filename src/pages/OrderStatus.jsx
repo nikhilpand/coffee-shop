@@ -13,18 +13,50 @@ const STATUS_STEPS = [
 
 export default function OrderStatus() {
   const { orderId } = useParams();
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState(() => orderService.getOrderById(orderId));
+  const [isLoading, setIsLoading] = useState(!orderService.getOrderById(orderId));
 
   useEffect(() => {
+    let isMounted = true;
+
+    // 1. If not found in immediate memory, fetch from Firestore cloud
+    if (!order) {
+      orderService.getOrderDoc(orderId).then((fetched) => {
+        if (isMounted) {
+          if (fetched) setOrder(fetched);
+          setIsLoading(false);
+        }
+      });
+    } else {
+      setIsLoading(false);
+    }
+
+    // 2. Real-time stream subscription for live status changes
     const unsubscribe = orderService.subscribe((orders) => {
       const found = orders.find((o) => o.id === orderId);
-      if (found) {
+      if (found && isMounted) {
         setOrder(found);
+        setIsLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [orderId]);
+
+  if (isLoading) {
+    return (
+      <main className="pt-36 pb-24 text-center max-w-md mx-auto px-5">
+        <div className="w-12 h-12 rounded-full bg-cream text-espresso flex items-center justify-center mx-auto mb-4 animate-bounce">
+          <Coffee size={24} className="text-caramel" />
+        </div>
+        <h2 className="font-display text-2xl font-semibold text-espresso mb-2">Connecting to Table Ticket...</h2>
+        <p className="text-xs text-warm-gray">Syncing live barista status with Cloud Firestore.</p>
+      </main>
+    );
+  }
 
   if (!order) {
     return (

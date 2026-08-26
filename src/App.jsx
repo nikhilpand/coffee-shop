@@ -7,6 +7,7 @@ import Toast from './components/Toast';
 import CartDrawer from './components/CartDrawer';
 import SearchOverlay from './components/SearchOverlay';
 import TableModal from './components/TableModal';
+import PageTransition from './components/PageTransition';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
 import Product from './pages/Product';
@@ -43,12 +44,54 @@ export default function App() {
 
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Home favorites={favorites} />} />
-          <Route path="/menu" element={<Menu favorites={favorites} />} />
-          <Route path="/product/:id" element={<Product favorites={favorites} />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/favorites" element={<FavoritesPage favorites={favorites} />} />
-          <Route path="/order/:orderId" element={<OrderStatus />} />
+          <Route
+            path="/"
+            element={
+              <PageTransition>
+                <Home favorites={favorites} />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/menu"
+            element={
+              <PageTransition>
+                <Menu favorites={favorites} />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/product/:id"
+            element={
+              <PageTransition>
+                <Product favorites={favorites} />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <PageTransition>
+                <About />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <PageTransition>
+                <FavoritesPage favorites={favorites} />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/order/:orderId"
+            element={
+              <PageTransition>
+                <OrderStatus />
+              </PageTransition>
+            }
+          />
           <Route path="/staff" element={<StaffDashboard />} />
         </Routes>
       </AnimatePresence>
@@ -57,3 +100,4 @@ export default function App() {
     </div>
   );
 }
+
