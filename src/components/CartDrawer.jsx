@@ -10,6 +10,7 @@ import { soundEffects } from '../utils/soundEffects';
 import products from '../data/products';
 
 const TIP_OPTIONS = [0, 20, 30, 50];
+const MAX_CART_ITEMS = 20;
 
 export default function CartDrawer() {
   const { items, removeItem, updateQuantity, subtotal, tax, total, itemCount, isDrawerOpen, setIsDrawerOpen, clearCart, addItem } = useCart();
@@ -32,13 +33,17 @@ export default function CartDrawer() {
 
   const finalTotal = total + selectedTip;
 
+  const [orderError, setOrderError] = useState('');
+
   const handlePlaceOrder = () => {
+    if (isProcessing) return; // Debounce — prevent double-tap
     setIsProcessing(true);
+    setOrderError('');
 
     try {
       const order = orderService.createOrder({
         tableNumber,
-        items,
+        items: items.slice(0, MAX_CART_ITEMS),
         subtotal,
         tax,
         total: finalTotal,
@@ -59,9 +64,12 @@ export default function CartDrawer() {
       navigate(`/order/${order.id}`);
     } catch (err) {
       console.error('Order placement error:', err);
+      setOrderError(err.message || 'Something went wrong. Please try again.');
       setIsProcessing(false);
     }
   };
+
+  const isCartFull = itemCount >= MAX_CART_ITEMS;
 
   return (
     <AnimatePresence>
@@ -199,12 +207,13 @@ export default function CartDrawer() {
                                 {item.quantity}
                               </span>
                               <button
-                                onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                                className="p-1.5 text-warm-gray hover:text-espresso transition-colors"
-                                aria-label="Increase quantity"
-                              >
-                                <Plus size={12} />
-                              </button>
+                              onClick={() => updateQuantity(item.key, item.quantity + 1)}
+                              className="p-1.5 text-warm-gray hover:text-espresso transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              aria-label="Increase quantity"
+                              disabled={isCartFull}
+                            >
+                              <Plus size={12} />
+                            </button>
                             </div>
                             <span className="text-sm font-semibold text-espresso">
                               {formatPrice(item.price * item.quantity)}
@@ -432,10 +441,18 @@ export default function CartDrawer() {
                   </div>
                 </div>
 
+                {/* Error message */}
+                {orderError && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 mb-3">
+                    <p className="text-xs text-red-600 font-medium">{orderError}</p>
+                  </div>
+                )}
+
                 {/* Submit button */}
                 <button
                   onClick={handlePlaceOrder}
-                  className="w-full py-3.5 bg-espresso text-ivory text-sm font-semibold rounded-full hover:bg-coffee transition-colors shadow-md flex items-center justify-center gap-2"
+                  disabled={isProcessing}
+                  className="w-full py-3.5 bg-espresso text-ivory text-sm font-semibold rounded-full hover:bg-coffee transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle2 size={16} />
                   Confirm & Place Order ({formatPrice(finalTotal)})

@@ -57,7 +57,7 @@ export default function Footer() {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full border border-ivory/15 hover:border-ivory/30 hover:bg-ivory/5 transition-all"
+                className="p-2 rounded-full border border-ivory/15 hover:border-ivory/30 hover:bg-ivory/5 transition-all icon-shine"
                 aria-label="Instagram"
               >
                 <IconInstagram />
@@ -66,7 +66,7 @@ export default function Footer() {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full border border-ivory/15 hover:border-ivory/30 hover:bg-ivory/5 transition-all"
+                className="p-2 rounded-full border border-ivory/15 hover:border-ivory/30 hover:bg-ivory/5 transition-all icon-shine"
                 aria-label="Facebook"
               >
                 <IconFacebook />
@@ -75,7 +75,7 @@ export default function Footer() {
                 href="https://x.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full border border-ivory/15 hover:border-ivory/30 hover:bg-ivory/5 transition-all"
+                className="p-2 rounded-full border border-ivory/15 hover:border-ivory/30 hover:bg-ivory/5 transition-all icon-shine"
                 aria-label="X (Twitter)"
               >
                 <IconX />

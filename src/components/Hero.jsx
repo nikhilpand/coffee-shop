@@ -1,5 +1,39 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import MagneticButton from './MagneticButton';
+
+const letterVariants = {
+  hidden: { opacity: 0, y: 40, filter: 'blur(4px)' },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: {
+      delay: 0.5 + i * 0.035,
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
+};
+
+function AnimatedHeading({ text, className }) {
+  return (
+    <span className={className} aria-label={text}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          custom={i}
+          variants={letterVariants}
+          initial="hidden"
+          animate="visible"
+          style={{ display: 'inline-block' }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
 
 export default function Hero() {
   return (
@@ -7,19 +41,30 @@ export default function Hero() {
       {/* Background Image */}
       <motion.div
         className="absolute inset-0"
-        initial={{ scale: 1.1 }}
+        initial={{ scale: 1.08 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 1.8, ease: 'easeOut' }}
+        transition={{ duration: 2.2, ease: [0.22, 1, 0.36, 1] }}
       >
         <img
           src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=80"
           alt="Warm café interior with morning light"
           className="w-full h-full object-cover"
           loading="eager"
+          fetchpriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-ivory/95 via-ivory/80 to-ivory/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-ivory/60 via-transparent to-transparent" />
       </motion.div>
+
+      {/* Subtle grain texture on hero */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.04] mix-blend-multiply"
+        aria-hidden="true"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundSize: '128px 128px',
+        }}
+      />
 
       {/* Steam decoration */}
       <div className="absolute right-[18%] top-[28%] hidden lg:block opacity-40 pointer-events-none">
@@ -66,21 +111,19 @@ export default function Hero() {
             Your Daily Ritual
           </motion.p>
 
-          <motion.h1
-            className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[5.2rem] font-semibold text-espresso leading-[1.05] tracking-tight mb-6 md:mb-8"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-          >
-            Coffee,<br />
-            <span className="italic font-normal">slowly</span> made.
-          </motion.h1>
+          <h1 className="font-display text-fluid-hero font-semibold text-espresso leading-[1.05] tracking-tight mb-6 md:mb-8">
+            <AnimatedHeading text="Coffee," />
+            <br />
+            <span className="italic font-normal">
+              <AnimatedHeading text="slowly made." className="italic font-normal" />
+            </span>
+          </h1>
 
           <motion.p
-            className="text-base md:text-lg text-warm-gray leading-relaxed max-w-md mb-8 md:mb-10"
+            className="text-fluid-base text-warm-gray leading-relaxed max-w-md mb-8 md:mb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.7 }}
+            transition={{ delay: 0.9, duration: 0.7 }}
           >
             Thoughtfully brewed coffee, warm pastries and little moments worth staying for.
           </motion.p>
@@ -89,20 +132,18 @@ export default function Hero() {
             className="flex flex-wrap gap-3 md:gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.7 }}
+            transition={{ delay: 1.1, duration: 0.7 }}
           >
-            <Link
-              to="/menu"
-              className="inline-flex items-center px-7 py-3.5 bg-espresso text-ivory text-sm font-medium tracking-wide rounded-full hover:bg-coffee transition-colors duration-300"
-            >
-              Explore Menu
-            </Link>
-            <Link
-              to="/about"
-              className="inline-flex items-center px-7 py-3.5 border border-espresso/20 text-espresso text-sm font-medium tracking-wide rounded-full hover:bg-espresso/5 transition-colors duration-300"
-            >
-              Visit Us
-            </Link>
+            <MagneticButton as={Link} to="/menu" strength={0.25}>
+              <span className="inline-flex items-center px-7 py-3.5 bg-espresso text-ivory text-sm font-medium tracking-wide rounded-full hover:bg-coffee transition-colors duration-300 shadow-lg shadow-espresso/20">
+                Explore Menu
+              </span>
+            </MagneticButton>
+            <MagneticButton as={Link} to="/about" strength={0.25}>
+              <span className="inline-flex items-center px-7 py-3.5 border border-espresso/20 text-espresso text-sm font-medium tracking-wide rounded-full hover:bg-espresso/5 transition-colors duration-300">
+                Visit Us
+              </span>
+            </MagneticButton>
           </motion.div>
         </div>
       </div>

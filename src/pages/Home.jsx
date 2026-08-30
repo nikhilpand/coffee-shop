@@ -9,13 +9,6 @@ import CoffeeMatcherModal from '../components/CoffeeMatcherModal';
 import LoyaltyStampCard from '../components/LoyaltyStampCard';
 import products, { testimonials } from '../data/products';
 
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-80px' },
-  transition: { duration: 0.65 },
-};
-
 export default function Home({ favorites }) {
   const [isMatcherOpen, setIsMatcherOpen] = useState(false);
   const featured = products.filter((p) => p.popular).slice(0, 4);
@@ -70,7 +63,7 @@ export default function Home({ favorites }) {
             title="Handcrafted Favourites"
             description="Roasted in small batches from Chikmagalur estates. Balanced, rich, and unforgettable."
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 stagger-grid">
             {featured.map((product, i) => (
               <ProductCard key={product.id} product={product} favorites={favorites} index={i} />
             ))}
@@ -95,10 +88,10 @@ export default function Home({ favorites }) {
       </section>
 
       {/* ── Editorial: Slow Mornings ── */}
-      <section className="py-16 md:py-24 bg-cream">
+      <section className="py-16 md:py-24 bg-cream cv-auto">
         <div className="max-w-7xl mx-auto px-5 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <motion.div {...fadeUp} className="order-2 lg:order-1">
+            <div className="order-2 lg:order-1 scroll-reveal">
               <p className="text-xs font-bold tracking-[0.25em] uppercase text-caramel mb-4">
                 The Slow Pour Way
               </p>
@@ -128,12 +121,8 @@ export default function Home({ favorites }) {
                 Our story & estates
                 <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
               </Link>
-            </motion.div>
-            <motion.div
-              {...fadeUp}
-              transition={{ ...fadeUp.transition, delay: 0.15 }}
-              className="order-1 lg:order-2"
-            >
+            </div>
+            <div className="order-1 lg:order-2 scroll-reveal-scale">
               <div className="rounded-3xl overflow-hidden aspect-[4/5] lg:aspect-[3/4] shadow-md border border-border/60">
                 <img
                   src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&q=80"
@@ -142,7 +131,7 @@ export default function Home({ favorites }) {
                   loading="lazy"
                 />
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -155,7 +144,7 @@ export default function Home({ favorites }) {
             title="Fresh Hearth Bakes"
             description="27-layer butter croissants, Pain au Chocolat, and brioche rolls baked fresh every morning."
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 stagger-grid">
             {pastries.map((product, i) => (
               <ProductCard key={product.id} product={product} favorites={favorites} index={i} />
             ))}
@@ -164,10 +153,10 @@ export default function Home({ favorites }) {
       </section>
 
       {/* ── Editorial: Roasted with Intention ── */}
-      <section className="py-16 md:py-24 bg-cream">
+      <section className="py-16 md:py-24 bg-cream cv-auto">
         <div className="max-w-7xl mx-auto px-5 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <motion.div {...fadeUp}>
+            <div className="scroll-reveal-scale">
               <div className="rounded-3xl overflow-hidden aspect-[4/5] lg:aspect-[3/4] shadow-md border border-border/60">
                 <img
                   src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80"
@@ -176,8 +165,8 @@ export default function Home({ favorites }) {
                   loading="lazy"
                 />
               </div>
-            </motion.div>
-            <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }}>
+            </div>
+            <div className="scroll-reveal">
               <p className="text-xs font-bold tracking-[0.25em] uppercase text-caramel mb-4">
                 Single Origin Provenance
               </p>
@@ -196,7 +185,7 @@ export default function Home({ favorites }) {
                 View full tasting menu
                 <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>

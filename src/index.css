@@ -1,6 +1,3 @@
-/* ── Google Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap');
-
 @import 'tailwindcss';
 
 /* ── Design Tokens ── */
@@ -17,13 +14,15 @@
   --color-border:   #E8E0D4;
   --color-overlay:  rgba(44, 36, 32, 0.6);
 
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Instrument Sans', system-ui, sans-serif;
 }
 
 /* ── Base ── */
 html {
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-sand) var(--color-cream);
 }
 
 body {
@@ -39,7 +38,7 @@ body {
   color: white;
 }
 
-/* ── Scrollbar ── */
+/* ── Scrollbar (webkit fallback) ── */
 ::-webkit-scrollbar       { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--color-cream); }
 ::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: 3px; }
@@ -48,6 +47,14 @@ body {
 /* ── Font Utilities ── */
 .font-display { font-family: var(--font-display); }
 .font-body    { font-family: var(--font-body); }
+
+/* ── Fluid Type Scale ── */
+.text-fluid-sm   { font-size: clamp(0.8rem, 0.75rem + 0.25vw, 0.95rem); }
+.text-fluid-base { font-size: clamp(0.9rem, 0.85rem + 0.3vw, 1.1rem); }
+.text-fluid-lg   { font-size: clamp(1.2rem, 1rem + 1vw, 1.8rem); }
+.text-fluid-xl   { font-size: clamp(1.8rem, 1.2rem + 2vw, 3rem); }
+.text-fluid-2xl  { font-size: clamp(2.2rem, 1.5rem + 3vw, 4.5rem); }
+.text-fluid-hero { font-size: clamp(2.8rem, 2rem + 3.5vw, 5.2rem); }
 
 /* ── Steam Animation ── */
 @keyframes steam-rise {
@@ -158,3 +165,230 @@ body {
 img { transition: opacity 0.3s ease; }
 img.lazy-loaded { opacity: 1; }
 
+/* ═══════════════════════════════════════════════ */
+/* ── NEW: Modern Enhancements                  ── */
+/* ═══════════════════════════════════════════════ */
+
+/* ── Scroll-Driven Reveal Animation ── */
+@keyframes scroll-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scroll-reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scroll-reveal {
+  animation: scroll-reveal linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 30%;
+}
+
+.scroll-reveal-scale {
+  animation: scroll-reveal-scale linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 35%;
+}
+
+/* ── Staggered grid entrance via nth-child ── */
+.stagger-grid > * {
+  animation: scroll-reveal linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 25%;
+}
+.stagger-grid > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-grid > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-grid > *:nth-child(4) { animation-delay: 180ms; }
+
+/* ── Grain Texture Overlay ── */
+@keyframes grain-shift {
+  0%, 100% { transform: translate(0, 0); }
+  10%      { transform: translate(-2%, -3%); }
+  30%      { transform: translate(3%, 2%); }
+  50%      { transform: translate(-1%, 4%); }
+  70%      { transform: translate(2%, -2%); }
+  90%      { transform: translate(-3%, 1%); }
+}
+
+/* ── Marquee Scroll ── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.marquee {
+  animation: marquee 40s linear infinite;
+}
+
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+/* ── Text Reveal (letter-by-letter) ── */
+@keyframes text-clip-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+.text-reveal {
+  animation: text-clip-reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Active Nav Link Underline ── */
+.nav-link-active {
+  position: relative;
+}
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-caramel);
+  border-radius: 1px;
+  transform: scaleX(1);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-caramel);
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ── Glassmorphism ── */
+.glass {
+  background: rgba(250, 247, 242, 0.72);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+.glass-dark {
+  background: rgba(44, 24, 16, 0.65);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+/* ── Card Tilt Hover ── */
+.card-tilt {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+.card-tilt:hover {
+  transform: perspective(800px) rotateX(-2deg) rotateY(3deg) translateY(-4px);
+  box-shadow: 0 20px 50px rgba(59, 35, 20, 0.14);
+}
+
+/* ── Social Icon Shine ── */
+.icon-shine {
+  position: relative;
+  overflow: hidden;
+}
+.icon-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+.icon-shine:hover::before {
+  left: 100%;
+}
+
+/* ── Counter Animation ── */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Badge Pulse ── */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+
+.badge-pulse {
+  animation: badge-pulse 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Content Visibility for off-screen sections ── */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 600px;
+}
+
+/* ── Skeleton Loading Card ── */
+.skeleton-card {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.skeleton-card .skeleton-img {
+  aspect-ratio: 4/3;
+  background: var(--color-cream);
+}
+.skeleton-card .skeleton-line {
+  height: 0.75rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+.skeleton-card .skeleton-line-short {
+  width: 60%;
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .scroll-reveal-scale,
+  .stagger-grid > *,
+  .marquee,
+  .steam-line,
+  .float,
+  .shimmer {
+    animation: none !important;
+  }
+
+  .card-lift:hover {
+    transform: none;
+  }
+
+  .card-tilt:hover {
+    transform: none;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

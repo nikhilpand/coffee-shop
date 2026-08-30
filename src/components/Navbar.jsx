@@ -71,8 +71,8 @@ export default function Navbar({ search, favorites }) {
                   to={link.to}
                   className={`text-sm font-medium tracking-wide uppercase transition-colors duration-200 ${
                     location.pathname === link.to
-                      ? 'text-espresso font-semibold'
-                      : 'text-warm-gray hover:text-espresso'
+                      ? 'text-espresso font-semibold nav-link-active'
+                      : 'text-warm-gray hover:text-espresso nav-link'
                   }`}
                 >
                   {link.label}

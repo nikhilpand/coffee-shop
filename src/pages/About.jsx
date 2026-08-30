@@ -1,12 +1,5 @@
 import { motion } from 'framer-motion';
 
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.7 },
-};
-
 const timeline = [
   { year: '2019', title: 'The First Cup', text: 'A small idea in a cramped kitchen — what if coffee could be slower, better, more intentional?' },
   { year: '2020', title: 'Finding the Beans', text: 'We traveled to Chikmagalur and found farms that cared about their coffee as much as we did.' },
@@ -26,7 +19,7 @@ export default function About() {
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-5 md:px-8 mb-20 md:mb-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <motion.div {...fadeUp}>
+          <div className="scroll-reveal">
             <p className="text-xs font-medium tracking-[0.25em] uppercase text-caramel mb-4">
               Our Story
             </p>
@@ -39,8 +32,8 @@ export default function About() {
               What if we gave each cup the attention it deserved? That question
               became a café, and that café became a community.
             </p>
-          </motion.div>
-          <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }}>
+          </div>
+          <div className="scroll-reveal-scale">
             <div className="rounded-2xl overflow-hidden aspect-[4/5]">
               <img
                 src="https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=800&q=80"
@@ -48,15 +41,15 @@ export default function About() {
                 className="w-full h-full object-cover"
               />
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Philosophy */}
-      <section className="py-16 md:py-24 bg-cream">
+      <section className="py-16 md:py-24 bg-cream cv-auto">
         <div className="max-w-7xl mx-auto px-5 md:px-8">
           <div className="max-w-3xl mx-auto text-center">
-            <motion.div {...fadeUp}>
+            <div className="scroll-reveal">
               <p className="text-xs font-medium tracking-[0.25em] uppercase text-caramel mb-4">
                 Philosophy
               </p>
@@ -71,16 +64,16 @@ export default function About() {
                 and no shortcuts. We believe if you're going to make something, you should
                 make it properly.
               </p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Sourcing */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 cv-auto">
         <div className="max-w-7xl mx-auto px-5 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <motion.div {...fadeUp}>
+            <div className="scroll-reveal-scale">
               <div className="rounded-2xl overflow-hidden aspect-[3/4]">
                 <img
                   src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80"
@@ -89,8 +82,8 @@ export default function About() {
                   loading="lazy"
                 />
               </div>
-            </motion.div>
-            <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }}>
+            </div>
+            <div className="scroll-reveal">
               <p className="text-xs font-medium tracking-[0.25em] uppercase text-caramel mb-4">
                 Coffee Sourcing
               </p>
@@ -109,16 +102,16 @@ export default function About() {
                 Notes of chocolate, citrus, and caramel that come from the bean itself,
                 not from burning it.
               </p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Bakery */}
-      <section className="py-16 md:py-24 bg-cream">
+      <section className="py-16 md:py-24 bg-cream cv-auto">
         <div className="max-w-7xl mx-auto px-5 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <motion.div {...fadeUp} className="order-2 lg:order-1">
+            <div className="order-2 lg:order-1 scroll-reveal">
               <p className="text-xs font-medium tracking-[0.25em] uppercase text-caramel mb-4">
                 From the Bakery
               </p>
@@ -135,8 +128,8 @@ export default function About() {
                 We don't believe in "good enough." Either it's worth serving, or
                 it stays in the kitchen.
               </p>
-            </motion.div>
-            <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }} className="order-1 lg:order-2">
+            </div>
+            <div className="order-1 lg:order-2 scroll-reveal-scale">
               <div className="rounded-2xl overflow-hidden aspect-[3/4]">
                 <img
                   src="https://images.unsplash.com/photo-1555507036-ab1f4038024a?w=800&q=80"
@@ -145,32 +138,28 @@ export default function About() {
                   loading="lazy"
                 />
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Timeline */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 cv-auto">
         <div className="max-w-3xl mx-auto px-5 md:px-8">
-          <motion.div {...fadeUp} className="text-center mb-14">
+          <div className="text-center mb-14 scroll-reveal">
             <p className="text-xs font-medium tracking-[0.25em] uppercase text-caramel mb-3">
               Our Journey
             </p>
             <h2 className="font-display text-3xl md:text-4xl font-semibold text-espresso">
               How we got here
             </h2>
-          </motion.div>
+          </div>
 
           <div className="space-y-0">
             {timeline.map((item, i) => (
-              <motion.div
+              <div
                 key={item.year}
-                className="flex gap-6 md:gap-8"
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="flex gap-6 md:gap-8 scroll-reveal"
               >
                 <div className="flex flex-col items-center">
                   <div className="w-3 h-3 bg-caramel rounded-full flex-shrink-0 mt-1.5" />
@@ -185,16 +174,16 @@ export default function About() {
                   </h3>
                   <p className="text-sm text-warm-gray leading-relaxed">{item.text}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Atmosphere */}
-      <section className="py-16 md:py-24 bg-cream">
+      <section className="py-16 md:py-24 bg-cream cv-auto">
         <div className="max-w-4xl mx-auto px-5 md:px-8 text-center">
-          <motion.div {...fadeUp}>
+          <div className="scroll-reveal">
             <p className="text-xs font-medium tracking-[0.25em] uppercase text-caramel mb-4">
               The Space
             </p>
@@ -207,22 +196,18 @@ export default function About() {
               Slow Pour to feel like a place you don't want to leave — with deep window
               seats, long communal tables, and corners perfect for reading or working.
             </p>
-          </motion.div>
+          </div>
           <div className="grid grid-cols-2 gap-3 md:gap-4">
             {[
               'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&q=80',
               'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=600&q=80',
             ].map((src, i) => (
-              <motion.div
+              <div
                 key={i}
-                className="rounded-2xl overflow-hidden aspect-[4/3]"
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="rounded-2xl overflow-hidden aspect-[4/3] scroll-reveal-scale"
               >
                 <img src={src} alt={`Café interior ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

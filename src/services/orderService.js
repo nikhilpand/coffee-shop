@@ -14,6 +14,34 @@ import {
 const STORAGE_KEY = 'slowpour_orders';
 const CHANNEL_NAME = 'slowpour_realtime_orders';
 
+// ── Rate Limiter ──
+const RATE_LIMIT_MAX = 3;       // max orders
+const RATE_LIMIT_WINDOW = 60000; // per 60 seconds
+const orderTimestamps = [];
+
+function isRateLimited() {
+  const now = Date.now();
+  // Remove timestamps outside the window
+  while (orderTimestamps.length > 0 && now - orderTimestamps[0] > RATE_LIMIT_WINDOW) {
+    orderTimestamps.shift();
+  }
+  return orderTimestamps.length >= RATE_LIMIT_MAX;
+}
+
+function recordOrderTimestamp() {
+  orderTimestamps.push(Date.now());
+}
+
+// ── Input Sanitization ──
+function sanitizeText(input, maxLength = 50) {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/<[^>]*>/g, '')       // Strip HTML tags
+    .replace(/[<>"'`]/g, '')       // Remove dangerous chars
+    .trim()
+    .slice(0, maxLength);
+}
+
 class OrderService {
   constructor() {
     this.channel = null;
@@ -124,12 +152,27 @@ class OrderService {
   }
 
   createOrder({ tableNumber, items, subtotal, tax, total, paymentMethod, customerName = '' }) {
-    const orderId = `ORD-${Date.now().toString(36).toUpperCase().slice(-4)}${Math.floor(10 + Math.random() * 90)}`;
+    // Rate limit check
+    if (isRateLimited()) {
+      throw new Error('Too many orders. Please wait a moment before ordering again.');
+    }
+
+    // Sanitize inputs
+    const safeName = sanitizeText(customerName, 50);
+
+    // Generate unique order ID with retry
+    let orderId;
+    let retries = 0;
+    do {
+      orderId = `ORD-${Date.now().toString(36).toUpperCase().slice(-4)}${Math.floor(10 + Math.random() * 90)}`;
+      retries++;
+    } while (this.getOrderById(orderId) && retries < 3);
+
     const newOrder = {
       id: orderId,
-      tableNumber: Number(tableNumber) || 1,
-      customerName: customerName.trim() || `Guest (Table ${tableNumber})`,
-      items,
+      tableNumber: Math.max(1, Math.min(24, Number(tableNumber) || 1)),
+      customerName: safeName || `Guest (Table ${tableNumber})`,
+      items: items.slice(0, 20), // Max 20 items
       subtotal,
       tax,
       total,
@@ -139,6 +182,9 @@ class OrderService {
       createdAt: new Date().toISOString(),
       estimatedTime: Math.min(15, Math.max(6, items.length * 4)),
     };
+
+    // Record for rate limiting
+    recordOrderTimestamp();
 
     // 1. Instant local state update
     const updatedOrders = [newOrder, ...this.getOrders().filter(o => o.id !== orderId)];

@@ -6,6 +6,36 @@ import { soundEffects } from '../utils/soundEffects';
 import { formatPrice } from '../utils/formatPrice';
 import TableQrGeneratorModal from '../components/TableQrGeneratorModal';
 
+// ── XSS Escape for print template ──
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ── SHA-256 hash for PIN comparison ──
+async function sha256(message) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// Pre-computed SHA-256 hashes for accepted PINs
+const VALID_PIN_HASHES = [
+  '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', // 1234
+  '5765cb64c11b526b0816e2f4f0b94da08ae397cfb3a93f77aab4dfe9b82e7a28', // 0000  — kept as fallback demo PIN
+];
+
+const MAX_PIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 30000; // 30 seconds
+
 export default function StaffDashboard() {
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('active'); // 'active' | 'preparing' | 'served' | 'all'
@@ -20,6 +50,9 @@ export default function StaffDashboard() {
   });
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  const isLocked = Date.now() < lockedUntil;
 
   // Subscribe to real-time order stream
   useEffect(() => {
@@ -41,10 +74,14 @@ export default function StaffDashboard() {
     return () => unsubscribe();
   }, [soundEnabled]);
 
-  const handlePinSubmit = (e) => {
+  const handlePinSubmit = async (e) => {
     e.preventDefault();
-    if (pinInput === '1234' || pinInput === '0000') {
+    if (isLocked) return;
+
+    const hashed = await sha256(pinInput);
+    if (VALID_PIN_HASHES.includes(hashed)) {
       setIsAuthenticated(true);
+      setFailedAttempts(0);
       try {
         sessionStorage.setItem('slowpour_staff_auth', 'true');
       } catch {
@@ -52,8 +89,14 @@ export default function StaffDashboard() {
       }
       setPinError(false);
     } else {
+      const newCount = failedAttempts + 1;
+      setFailedAttempts(newCount);
       setPinError(true);
       setPinInput('');
+      if (newCount >= MAX_PIN_ATTEMPTS) {
+        setLockedUntil(Date.now() + LOCKOUT_DURATION);
+        setFailedAttempts(0);
+      }
     }
   };
 
@@ -91,19 +134,19 @@ export default function StaffDashboard() {
           <div class="header">
             <h2>SLOW POUR CAFÉ</h2>
             <div class="table-badge">TABLE ${order.tableNumber}</div>
-            <div>Order: ${order.id}</div>
+            <div>Order: ${escapeHtml(order.id)}</div>
             <div>${new Date(order.createdAt).toLocaleTimeString()}</div>
-            <div>Guest: ${order.customerName || 'Dine-in Guest'}</div>
+            <div>Guest: ${escapeHtml(order.customerName || 'Dine-in Guest')}</div>
           </div>
           <div>
             ${order.items.map(i => `
               <div class="item">
-                <span>${i.quantity}x ${i.name} (${i.size})</span>
+                <span>${i.quantity}x ${escapeHtml(i.name)} (${escapeHtml(i.size || '')})</span>
                 <span>₹${i.price * i.quantity}</span>
               </div>
-              ${i.customizations?.milkLabel ? `<div class="notes">🥛 ${i.customizations.milkLabel}</div>` : ''}
-              ${i.customizations?.extrasLabels?.length ? `<div class="notes">✨ ${i.customizations.extrasLabels.join(', ')}</div>` : ''}
-              ${i.customizations?.note ? `<div class="notes">Note: "${i.customizations.note}"</div>` : ''}
+              ${i.customizations?.milkLabel ? `<div class="notes">🥛 ${escapeHtml(i.customizations.milkLabel)}</div>` : ''}
+              ${i.customizations?.extrasLabels?.length ? `<div class="notes">✨ ${i.customizations.extrasLabels.map(escapeHtml).join(', ')}</div>` : ''}
+              ${i.customizations?.note ? `<div class="notes">Note: "${escapeHtml(i.customizations.note)}"</div>` : ''}
             `).join('')}
           </div>
           <div class="footer">
@@ -163,14 +206,21 @@ export default function StaffDashboard() {
               placeholder="Enter 4-digit PIN"
               maxLength={6}
               autoFocus
-              className="w-full text-center tracking-widest text-xl font-bold py-3 bg-cream/60 border border-border rounded-xl text-espresso focus:outline-none focus:border-caramel"
+              disabled={isLocked}
+              className="w-full text-center tracking-widest text-xl font-bold py-3 bg-cream/60 border border-border rounded-xl text-espresso focus:outline-none focus:border-caramel disabled:opacity-40"
             />
-            {pinError && <p className="text-xs text-red-600">Incorrect PIN. Try 1234.</p>}
+            {pinError && !isLocked && <p className="text-xs text-red-600">Incorrect PIN. Please try again.</p>}
+            {isLocked && (
+              <p className="text-xs text-red-600 font-medium">
+                Too many attempts. Please wait 30 seconds before trying again.
+              </p>
+            )}
             <button
               type="submit"
-              className="w-full py-3.5 bg-espresso text-ivory text-sm font-semibold rounded-full hover:bg-coffee transition-colors shadow-xs"
+              disabled={isLocked}
+              className="w-full py-3.5 bg-espresso text-ivory text-sm font-semibold rounded-full hover:bg-coffee transition-colors shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Unlock Dashboard
+              {isLocked ? 'Locked — Please Wait' : 'Unlock Dashboard'}
             </button>
           </form>
         </motion.div>
